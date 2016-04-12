@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 2
+architectures: armeabi armeabi-v7a x86
+description: push
+author: Your Name
+license: Specify your license
+copyright: Copyright (c) 2016 by Your Company
+
+# these should not be edited
+name: push
+moduleid: org.jboss.aerogear.push
+guid: b9fcfad4-d52e-4015-ad93-1813a0164cca
+platform: android
+minsdk: 5.2.1.GA
