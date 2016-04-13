@@ -16,6 +16,8 @@ import org.jboss.aerogear.android.core.Callback;
 import org.jboss.aerogear.android.unifiedpush.PushRegistrar;
 import org.jboss.aerogear.android.unifiedpush.RegistrarManager;
 import org.jboss.aerogear.android.unifiedpush.gcm.AeroGearGCMPushConfiguration;
+import org.jboss.aerogear.android.unifiedpush.gcm.AeroGearGCMPushRegistrar;
+import org.jboss.aerogear.android.unifiedpush.metrics.UnifiedPushMetricsMessage;
 
 import android.os.Bundle;
 
@@ -24,11 +26,15 @@ public class PushPlugin extends KrollModule {
 
    private static final String MODULE_NAME = "PushModule";
 
+   private static Boolean wasInForeground;
+
    private KrollFunction successCallback = null;
    private KrollFunction errorCallback = null;
    private KrollFunction notificationCallback = null;
 
    private static final String REGISTRAR = "registrar";
+
+   private boolean sendMetrics;
 
    public PushPlugin() {
       super(MODULE_NAME);
@@ -46,6 +52,10 @@ public class PushPlugin extends KrollModule {
       successCallback = (KrollFunction) pushConfig.get("success");
       errorCallback = (KrollFunction) pushConfig.get("error");
       notificationCallback = (KrollFunction) pushConfig.get("onNotification");
+      if (pushConfig.get("sendMetricInfo") != null) {
+         sendMetrics = (Boolean) pushConfig.get("sendMetricInfo");
+      }
+      
       URI uri = null;
       try {
          uri = new URI((String) pushConfig.get("pushServerURL"));
@@ -91,7 +101,22 @@ public class PushPlugin extends KrollModule {
    public static void sendMessage(Bundle message) {
       PushPlugin module = getModule();
 
-      message.putBoolean("foreground", isInForeground());
+      Log.i(MODULE_NAME, "module.sendMetrics " + module.sendMetrics + " !foreground " + !wasInForeground);
+      if (module.sendMetrics && !wasInForeground) {
+         final UnifiedPushMetricsMessage metricsMessage = new UnifiedPushMetricsMessage(message);
+         final AeroGearGCMPushRegistrar registar = (AeroGearGCMPushRegistrar)RegistrarManager.getRegistrar(REGISTRAR);
+         registar.sendMetrics(metricsMessage, new Callback<UnifiedPushMetricsMessage>() {
+           public void onSuccess(UnifiedPushMetricsMessage unifiedPushMetricsMessage) {
+             Log.i(MODULE_NAME, String.format("The message '%s' was marked as opened", metricsMessage.getMessageId()));
+           }
+
+           public void onFailure(Exception e) {
+             Log.e(MODULE_NAME, e.getMessage(), e);
+           }
+         });
+      }
+      
+      message.putBoolean("foreground", wasInForeground);
       module.notificationCallback.callAsync(module.getKrollObject(), convertBundleToMap(message));
    }
 
@@ -139,7 +164,8 @@ public class PushPlugin extends KrollModule {
 
    public static boolean isInForeground() {
       try {
-         return new ForegroundCheckTask().execute(TiApplication.getInstance().getApplicationContext()).get();
+         wasInForeground = new ForegroundCheckTask().execute(TiApplication.getInstance().getApplicationContext()).get();
+         return wasInForeground;
       } catch (Exception e) {
          Log.e(MODULE_NAME, "could not determain state", e);
          return false;
