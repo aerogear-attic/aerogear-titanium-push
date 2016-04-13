@@ -101,7 +101,6 @@ public class PushPlugin extends KrollModule {
    public static void sendMessage(Bundle message) {
       PushPlugin module = getModule();
 
-      Log.i(MODULE_NAME, "module.sendMetrics " + module.sendMetrics + " !foreground " + !wasInForeground);
       if (module.sendMetrics && !wasInForeground) {
          final UnifiedPushMetricsMessage metricsMessage = new UnifiedPushMetricsMessage(message);
          final AeroGearGCMPushRegistrar registar = (AeroGearGCMPushRegistrar)RegistrarManager.getRegistrar(REGISTRAR);
