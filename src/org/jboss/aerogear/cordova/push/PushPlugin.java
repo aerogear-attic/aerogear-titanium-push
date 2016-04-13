@@ -25,9 +25,9 @@ public class PushPlugin extends KrollModule {
 	private static final String MODULE_NAME = "PushModule";
 
 	private KrollFunction successCallback = null;
-    private KrollFunction errorCallback = null;
-    private KrollFunction notificationCallback = null;
-    
+	private KrollFunction errorCallback = null;
+	private KrollFunction notificationCallback = null;
+
 	private static final String REGISTRAR = "registrar";
 
 	public PushPlugin() {
@@ -40,56 +40,60 @@ public class PushPlugin extends KrollModule {
 	}
 
 	@Kroll.method
+	@SuppressWarnings("rawtypes")
 	public void registerPush(Map pushConfig) {
 		Map androidSettings = pushConfig.get("android") != null ? (Map) pushConfig.get("android") : pushConfig;
 		successCallback = (KrollFunction) pushConfig.get("success");
-        errorCallback = (KrollFunction) pushConfig.get("error");
-        notificationCallback = (KrollFunction) pushConfig.get("onNotification");		
+		errorCallback = (KrollFunction) pushConfig.get("error");
+		notificationCallback = (KrollFunction) pushConfig.get("onNotification");
+		URI uri = null;
 		try {
-			AeroGearGCMPushConfiguration config = RegistrarManager
-					.config(REGISTRAR, AeroGearGCMPushConfiguration.class)
-					.setPushServerURI(new URI((String) pushConfig.get("pushServerURL")))
-					.setSenderIds((String) androidSettings.get("senderID"))
-					.setVariantID((String) androidSettings.get("variantID"))
-					.setSecret((String) androidSettings.get("variantSecret"))
-					.setAlias((String) pushConfig.get("alias"));
-			Object[] categories = (Object[]) pushConfig.get("categories");
-			if (categories != null) {
-				List<String> list = new ArrayList<String>();
-				for (Object object : categories) {
-					list.add((String) object);
-				}
-				config.setCategories(list);
-			}
-					
-			PushRegistrar registrar = config.asRegistrar();
-
-			registrar.register(TiApplication.getInstance()
-					.getApplicationContext(), new Callback<Void>() {
-				public void onSuccess(Void data) {
-					if (successCallback != null) {
-						successCallback.callAsync(getKrollObject(), (HashMap) null);
-					}
-				}
-
-				public void onFailure(Exception e) {
-					Log.e(MODULE_NAME, "could not register with UPS", e);
-					if (errorCallback != null) {
-						HashMap<String, Object> data = new HashMap<String, Object>();
-			            data.put("error", e.getMessage());
-						errorCallback.callAsync(getKrollObject(), data);
-					}
-				}
-			});
+			uri = new URI((String) pushConfig.get("pushServerURL"));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
+
+		AeroGearGCMPushConfiguration config = RegistrarManager
+				.config(REGISTRAR, AeroGearGCMPushConfiguration.class)
+				.setPushServerURI(uri)
+				.setSenderIds((String) androidSettings.get("senderID"))
+				.setVariantID((String) androidSettings.get("variantID"))
+				.setSecret((String) androidSettings.get("variantSecret"))
+				.setAlias((String) pushConfig.get("alias"));
+		Object[] categories = (Object[]) pushConfig.get("categories");
+		if (categories != null) {
+			List<String> list = new ArrayList<String>();
+			for (Object object : categories) {
+				list.add((String) object);
+			}
+			config.setCategories(list);
+		}
+
+		PushRegistrar registrar = config.asRegistrar();
+
+			registrar.register(TiApplication.getInstance()
+					.getApplicationContext(), new Callback<Void>() {
+					public void onSuccess(Void data) {
+						if (successCallback != null) {
+						successCallback.callAsync(getKrollObject(), (HashMap) null);
+						}
+					}
+
+					public void onFailure(Exception e) {
+						Log.e(MODULE_NAME, "could not register with UPS", e);
+						if (errorCallback != null) {
+							HashMap<String, Object> data = new HashMap<String, Object>();
+							data.put("error", e.getMessage());
+							errorCallback.callAsync(getKrollObject(), data);
+						}
+					}
+				});
 	}
 
 	public static void sendMessage(Bundle message) {
 		PushPlugin module = getModule();
 
-		message.putBoolean("foreground", isInForeground()); 
+		message.putBoolean("foreground", isInForeground());
 		module.notificationCallback.callAsync(module.getKrollObject(), convertBundleToMap(message));
 	}
 
@@ -136,7 +140,7 @@ public class PushPlugin extends KrollModule {
 	public static boolean isActive() {
 		return TiApplication.getInstance().getModuleByName(MODULE_NAME) != null;
 	}
-	
+
 	public static boolean isInForeground() {
 		try {
 			return new ForegroundCheckTask().execute(TiApplication.getInstance().getApplicationContext()).get();
@@ -144,5 +148,5 @@ public class PushPlugin extends KrollModule {
 			Log.e(MODULE_NAME, "could not determain state", e);
 			return false;
 		}
-	}	
+	}
 }
