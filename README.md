@@ -1,5 +1,10 @@
-# aerogear-titanium-push
+# aerogear-titanium-push [![gitTio](http://gitt.io/badge.svg)](http://gitt.io/component/org.jboss.aerogear.push)
 
+Install it simply use the [gitTio CLI](http://gitt.io/cli):
+
+`$ gittio install org.jboss.aerogear.push`
+
+## Build
 Titanium version of the AeroGear push plugin for GCM
 
 To build, create a `build.properties` file with the following content:
