@@ -15,7 +15,7 @@ android.platform=/Users/###USER###/Library/Android/sdk/platforms/android-23
 android.ndk=/Users/###USER###/Library/Android/ndk
 ```
 
-Make sure your paths are correct for your system setup. Then run:
+Make sure your paths are correct for your system setup, then run:
 
 ```bash
 $ ant clean
