@@ -1,3 +1,6 @@
+## Deprecation Notice
+This repository has been deprecated and is not being maintained. If you have any questions, please get in touch with the collaborators.
+
 # aerogear-titanium-push [![gitTio](http://gitt.io/badge.svg)](http://gitt.io/component/org.jboss.aerogear.push)
 
 Install it simply use the [gitTio CLI](http://gitt.io/cli):
